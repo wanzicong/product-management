@@ -1,0 +1,100 @@
+# 生产环境 Docker Compose 配置
+# 用于服务器部署
+
+version: '3.8'
+
+services:
+  # ============ MySQL 数据库 ============
+  mysql:
+    image: mysql:8.0
+    container_name: product-mysql-prod
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-StrongPassword123!}
+      MYSQL_DATABASE: product_management
+      MYSQL_USER: product
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-ProductPass123!}
+      TZ: Asia/Shanghai
+    volumes:
+      - mysql_prod_data:/var/lib/mysql
+      - ./docker/mysql/my.cnf:/etc/mysql/conf.d/my.cnf:ro
+      - ./backup:/backup
+    command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - product-network
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+
+  # ============ 应用服务 ============
+  app:
+    image: ${APP_IMAGE:-ghcr.io/your-org/product-management:main}
+    container_name: product-app-prod
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/product_management?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD:-StrongPassword123!}
+      FILE_UPLOAD_PATH: /app/upload/
+      JAVA_OPTS: "-Xms512m -Xmx1024m -XX:+UseG1GC"
+      TZ: Asia/Shanghai
+    volumes:
+      - app_prod_upload:/app/upload
+      - app_prod_logs:/app/logs
+    depends_on:
+      mysql:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8080/login"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
+    networks:
+      - product-network
+    deploy:
+      resources:
+        limits:
+          memory: 1.5G
+
+  # ============ Nginx 反向代理（可选） ============
+  nginx:
+    image: nginx:alpine
+    container_name: product-nginx
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./docker/nginx/ssl:/etc/nginx/ssl:ro
+      - app_prod_upload:/var/www/upload:ro
+    depends_on:
+      - app
+    networks:
+      - product-network
+    profiles:
+      - with-nginx
+
+volumes:
+  mysql_prod_data:
+    name: product-mysql-prod-data
+  app_prod_upload:
+    name: product-app-prod-upload
+  app_prod_logs:
+    name: product-app-prod-logs
+
+networks:
+  product-network:
+    name: product-network-prod
+    driver: bridge

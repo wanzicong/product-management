@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>分类管理 - 商品管理中心</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.css" rel="stylesheet">
+    <link th:href="@{/static/css/custom.css}" rel="stylesheet">
+</head>
+<body>
+    <div th:replace="~{layout/header :: header}"></div>
+
+    <div class="container-fluid py-4">
+        <div class="mb-3">
+            <a href="/category/add" class="btn btn-success"><i class="bi bi-plus-circle"></i> 新增分类</a>
+        </div>
+
+        <div class="card">
+            <div class="card-header"><i class="bi bi-diagram-3"></i> 分类列表</div>
+            <div class="card-body">
+                <div id="categoryTree" class="category-tree">加载中...</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script th:src="@{/static/js/common.js}"></script>
+    <script>
+        $(function() { loadTree(); });
+
+        function loadTree() {
+            $.get('/category/tree', function(res) {
+                if (res.code === 200) {
+                    $('#categoryTree').html(renderTree(res.data));
+                }
+            });
+        }
+
+        function renderTree(list, level = 1) {
+            if (!list || list.length === 0) return '<p class="text-muted">暂无数据</p>';
+            let html = '<ul' + (level === 1 ? ' class="category-tree"' : '') + '>';
+            list.forEach(function(item) {
+                const statusBadge = item.status === 1 ?
+                    '<span class="badge bg-success">启用</span>' :
+                    '<span class="badge bg-secondary">禁用</span>';
+                html += `
+                    <li>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span>
+                                <i class="bi bi-folder${item.children && item.children.length > 0 ? '-fill text-warning' : ' text-secondary'}"></i>
+                                ${item.categoryName} ${statusBadge}
+                            </span>
+                            <div class="btn-group btn-group-sm">
+                                <a href="/category/add?parentId=${item.id}" class="btn btn-outline-success" title="添加子分类">
+                                    <i class="bi bi-plus"></i>
+                                </a>
+                                <a href="/category/edit/${item.id}" class="btn btn-outline-primary" title="编辑">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <button class="btn btn-outline-danger" onclick="deleteCategory(${item.id})" title="删除">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        ${item.children && item.children.length > 0 ? renderTree(item.children, level + 1) : ''}
+                    </li>
+                `;
+            });
+            html += '</ul>';
+            return html;
+        }
+
+        function deleteCategory(id) {
+            confirmDialog('确定要删除该分类吗？', function() {
+                $.post('/category/delete/' + id, function(res) {
+                    if (res.code === 200) {
+                        showSuccess('删除成功');
+                        loadTree();
+                    } else {
+                        showError(res.message);
+                    }
+                });
+            });
+        }
+    </script>
+</body>
+</html>

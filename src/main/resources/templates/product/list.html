@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>商品列表 - 商品管理中心</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.css" rel="stylesheet">
+    <link th:href="@{/static/css/custom.css}" rel="stylesheet">
+</head>
+<body>
+    <div th:replace="~{layout/header :: header}"></div>
+
+    <div class="container-fluid py-4">
+        <!-- 搜索表单 -->
+        <div class="search-form">
+            <form id="searchForm" class="row g-3">
+                <div class="col-md-2">
+                    <input type="text" class="form-control" id="productName" placeholder="商品名称">
+                </div>
+                <div class="col-md-2">
+                    <input type="text" class="form-control" id="productCode" placeholder="商品编码">
+                </div>
+                <div class="col-md-2">
+                    <select class="form-select" id="categoryId">
+                        <option value="">全部分类</option>
+                        <option th:each="c : ${categories}" th:value="${c.id}"
+                                th:text="${c.level == 1 ? c.categoryName : (c.level == 2 ? '├─ ' + c.categoryName : '│  ├─ ' + c.categoryName)}">
+                        </option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select class="form-select" id="brandId">
+                        <option value="">全部品牌</option>
+                        <option th:each="b : ${brands}" th:value="${b.id}" th:text="${b.brandName}"></option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select class="form-select" id="status">
+                        <option value="">全部状态</option>
+                        <option value="1">上架</option>
+                        <option value="0">下架</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="button" class="btn btn-primary" onclick="loadData(1)">
+                        <i class="bi bi-search"></i> 搜索
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="resetSearch()">
+                        <i class="bi bi-arrow-clockwise"></i> 重置
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- 操作按钮 -->
+        <div class="mb-3">
+            <a href="/product/add" class="btn btn-success">
+                <i class="bi bi-plus-circle"></i> 新增商品
+            </a>
+            <button type="button" class="btn btn-danger" onclick="batchDelete()">
+                <i class="bi bi-trash"></i> 批量删除
+            </button>
+            <button type="button" class="btn btn-primary" onclick="batchUpdateStatus(1)">
+                <i class="bi bi-check-circle"></i> 批量上架
+            </button>
+            <button type="button" class="btn btn-secondary" onclick="batchUpdateStatus(0)">
+                <i class="bi bi-x-circle"></i> 批量下架
+            </button>
+        </div>
+
+        <!-- 数据表格 -->
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th><input type="checkbox" id="checkAll" onclick="toggleCheckAll()"></th>
+                                <th>图片</th>
+                                <th>商品编码</th>
+                                <th>商品名称</th>
+                                <th>分类</th>
+                                <th>品牌</th>
+                                <th>价格</th>
+                                <th>库存</th>
+                                <th>状态</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dataList">
+                            <tr>
+                                <td colspan="10" class="text-center">加载中...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div id="pagination" class="mt-3"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script th:src="@{/static/js/common.js}"></script>
+    <script>
+        let currentPage = 1;
+        const pageSize = 10;
+
+        $(function() {
+            loadData(1);
+        });
+
+        function loadData(page) {
+            currentPage = page;
+            const params = {
+                pageNum: page,
+                pageSize: pageSize,
+                productName: $('#productName').val(),
+                productCode: $('#productCode').val(),
+                categoryId: $('#categoryId').val(),
+                brandId: $('#brandId').val(),
+                status: $('#status').val()
+            };
+
+            $.get('/product/page', params, function(res) {
+                if (res.code === 200) {
+                    renderTable(res.data);
+                    renderPagination(res.data);
+                } else {
+                    showError(res.message);
+                }
+            });
+        }
+
+        function renderTable(data) {
+            const list = data.records || [];
+            let html = '';
+            if (list.length === 0) {
+                html = '<tr><td colspan="10" class="text-center text-muted py-4">暂无数据</td></tr>';
+            } else {
+                list.forEach(function(item) {
+                    const stockClass = item.stock <= item.stockWarning ? 'stock-warning' : '';
+                    html += `
+                        <tr>
+                            <td><input type="checkbox" class="item-check" value="${item.id}"></td>
+                            <td>
+                                ${item.mainImage ?
+                                    `<img src="${item.mainImage}" class="product-image" alt="">` :
+                                    '<span class="text-muted">无图片</span>'}
+                            </td>
+                            <td>${item.productCode || '-'}</td>
+                            <td>${item.productName || '-'}</td>
+                            <td>${item.categoryName || '-'}</td>
+                            <td>${item.brandName || '-'}</td>
+                            <td>${formatMoney(item.price)}</td>
+                            <td class="${stockClass}">${item.stock}</td>
+                            <td>${getStatusBadge(item.status)}</td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="/product/detail/${item.id}" class="btn btn-outline-info" title="详情">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a href="/product/edit/${item.id}" class="btn btn-outline-primary" title="编辑">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a href="/stock/adjust/${item.id}" class="btn btn-outline-success" title="库存">
+                                        <i class="bi bi-archive"></i>
+                                    </a>
+                                    <button class="btn btn-outline-danger" onclick="deleteProduct(${item.id})" title="删除">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
+            $('#dataList').html(html);
+            $('#checkAll').prop('checked', false);
+        }
+
+        function renderPagination(data) {
+            const html = generatePagination(data.current, data.pages, 'loadData');
+            $('#pagination').html(html);
+        }
+
+        function resetSearch() {
+            $('#searchForm')[0].reset();
+            loadData(1);
+        }
+
+        function toggleCheckAll() {
+            const checked = $('#checkAll').prop('checked');
+            $('.item-check').prop('checked', checked);
+        }
+
+        function getSelectedIds() {
+            const ids = [];
+            $('.item-check:checked').each(function() {
+                ids.push($(this).val());
+            });
+            return ids;
+        }
+
+        function deleteProduct(id) {
+            confirmDialog('确定要删除该商品吗？', function() {
+                $.post('/product/delete/' + id, function(res) {
+                    if (res.code === 200) {
+                        showSuccess('删除成功');
+                        loadData(currentPage);
+                    } else {
+                        showError(res.message);
+                    }
+                });
+            });
+        }
+
+        function batchDelete() {
+            const ids = getSelectedIds();
+            if (ids.length === 0) {
+                showWarning('请选择要删除的商品');
+                return;
+            }
+            confirmDialog('确定要删除选中的 ' + ids.length + ' 个商品吗？', function() {
+                ajaxRequest('/product/batchDelete', 'POST', ids, function(res) {
+                    showSuccess('批量删除成功');
+                    loadData(currentPage);
+                });
+            });
+        }
+
+        function batchUpdateStatus(status) {
+            const ids = getSelectedIds();
+            if (ids.length === 0) {
+                showWarning('请选择要操作的商品');
+                return;
+            }
+            const action = status === 1 ? '上架' : '下架';
+            confirmDialog('确定要' + action + '选中的 ' + ids.length + ' 个商品吗？', function() {
+                $.ajax({
+                    url: '/product/batchUpdateStatus?status=' + status,
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(ids),
+                    success: function(res) {
+                        if (res.code === 200) {
+                            showSuccess('批量' + action + '成功');
+                            loadData(currentPage);
+                        } else {
+                            showError(res.message);
+                        }
+                    }
+                });
+            });
+        }
+    </script>
+</body>
+</html>

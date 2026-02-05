@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>商品详情 - 商品管理中心</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.css" rel="stylesheet">
+    <link th:href="@{/static/css/custom.css}" rel="stylesheet">
+</head>
+<body>
+    <div th:replace="~{layout/header :: header}"></div>
+
+    <div class="container-fluid py-4">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/product/list">商品管理</a></li>
+                <li class="breadcrumb-item active">商品详情</li>
+            </ol>
+        </nav>
+
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-eye"></i> 商品详情</span>
+                <div>
+                    <a th:href="@{/product/edit/{id}(id=${product.id})}" class="btn btn-sm btn-primary">
+                        <i class="bi bi-pencil"></i> 编辑
+                    </a>
+                    <a th:href="@{/stock/adjust/{id}(id=${product.id})}" class="btn btn-sm btn-success">
+                        <i class="bi bi-archive"></i> 库存调整
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 text-center">
+                        <img th:if="${product.mainImage}" th:src="${product.mainImage}" class="product-image-large mb-3" style="max-width: 300px;">
+                        <div th:unless="${product.mainImage}" class="text-muted py-5">
+                            <i class="bi bi-image" style="font-size: 5rem;"></i>
+                            <p>暂无图片</p>
+                        </div>
+                    </div>
+                    <div class="col-md-8">
+                        <table class="table table-bordered">
+                            <tr>
+                                <th width="120">商品编码</th>
+                                <td th:text="${product.productCode}">-</td>
+                                <th width="120">商品名称</th>
+                                <td th:text="${product.productName}">-</td>
+                            </tr>
+                            <tr>
+                                <th>分类</th>
+                                <td th:text="${product.categoryName}">-</td>
+                                <th>品牌</th>
+                                <td th:text="${product.brandName} ?: '-'">-</td>
+                            </tr>
+                            <tr>
+                                <th>销售价格</th>
+                                <td th:text="'¥' + ${#numbers.formatDecimal(product.price, 1, 2)}">-</td>
+                                <th>成本价格</th>
+                                <td th:text="${product.costPrice != null} ? '¥' + ${#numbers.formatDecimal(product.costPrice, 1, 2)} : '-'">-</td>
+                            </tr>
+                            <tr>
+                                <th>当前库存</th>
+                                <td th:classappend="${product.stock <= product.stockWarning} ? 'stock-warning'" th:text="${product.stock}">0</td>
+                                <th>库存预警值</th>
+                                <td th:text="${product.stockWarning}">0</td>
+                            </tr>
+                            <tr>
+                                <th>计量单位</th>
+                                <td th:text="${product.unit} ?: '-'">-</td>
+                                <th>状态</th>
+                                <td>
+                                    <span th:if="${product.status == 1}" class="badge bg-success">上架</span>
+                                    <span th:unless="${product.status == 1}" class="badge bg-secondary">下架</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>创建时间</th>
+                                <td th:text="${#temporals.format(product.createTime, 'yyyy-MM-dd HH:mm:ss')}">-</td>
+                                <th>更新时间</th>
+                                <td th:text="${#temporals.format(product.updateTime, 'yyyy-MM-dd HH:mm:ss')}">-</td>
+                            </tr>
+                        </table>
+                        <div th:if="${product.description}">
+                            <h6>商品描述</h6>
+                            <p class="text-muted" th:text="${product.description}"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

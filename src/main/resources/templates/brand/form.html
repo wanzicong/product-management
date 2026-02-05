@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${brand != null} ? '编辑品牌' : '新增品牌'">品牌表单</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.css" rel="stylesheet">
+    <link th:href="@{/static/css/custom.css}" rel="stylesheet">
+</head>
+<body>
+    <div th:replace="~{layout/header :: header}"></div>
+
+    <div class="container-fluid py-4">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/brand/list">品牌管理</a></li>
+                <li class="breadcrumb-item active" th:text="${brand != null} ? '编辑品牌' : '新增品牌'">品牌表单</li>
+            </ol>
+        </nav>
+
+        <div class="card">
+            <div class="card-header" th:text="${brand != null} ? '编辑品牌' : '新增品牌'">品牌表单</div>
+            <div class="card-body">
+                <form id="brandForm" style="max-width: 600px;">
+                    <input type="hidden" id="id" th:value="${brand?.id}">
+                    <div class="mb-3">
+                        <label class="form-label"><span class="text-danger">*</span> 品牌名称</label>
+                        <input type="text" class="form-control" id="brandName" th:value="${brand?.brandName}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">品牌Logo</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="logo" th:value="${brand?.logo}">
+                            <input type="file" class="d-none" id="logoFile" accept="image/*">
+                            <button type="button" class="btn btn-outline-secondary" onclick="$('#logoFile').click()"><i class="bi bi-upload"></i> 上传</button>
+                        </div>
+                        <div id="logoPreview" class="mt-2">
+                            <img th:if="${brand?.logo}" th:src="${brand.logo}" class="product-image-large">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">品牌描述</label>
+                        <textarea class="form-control" id="description" rows="3" th:text="${brand?.description}"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">排序值</label>
+                        <input type="number" class="form-control" id="sortOrder" th:value="${brand?.sortOrder} ?: 0" min="0">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">状态</label>
+                        <div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="status" value="1" th:checked="${brand == null || brand.status == 1}">
+                                <label class="form-check-label">启用</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="status" value="0" th:checked="${brand != null && brand.status == 0}">
+                                <label class="form-check-label">禁用</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-primary px-5"><i class="bi bi-check-circle"></i> 保存</button>
+                        <a href="/brand/list" class="btn btn-secondary px-5"><i class="bi bi-x-circle"></i> 取消</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script th:src="@{/static/js/common.js}"></script>
+    <script>
+        $(function() {
+            $('#logoFile').on('change', function() {
+                const file = this.files[0];
+                if (!file) return;
+                const formData = new FormData();
+                formData.append('file', file);
+                $.ajax({
+                    url: '/file/upload', type: 'POST', data: formData, processData: false, contentType: false,
+                    success: function(res) {
+                        if (res.code === 200) {
+                            $('#logo').val(res.data);
+                            $('#logoPreview').html(`<img src="${res.data}" class="product-image-large">`);
+                            showSuccess('上传成功');
+                        } else { showError(res.message); }
+                    }
+                });
+            });
+
+            $('#brandForm').on('submit', function(e) {
+                e.preventDefault();
+                const data = {
+                    id: $('#id').val() || null,
+                    brandName: $('#brandName').val(),
+                    logo: $('#logo').val(),
+                    description: $('#description').val(),
+                    sortOrder: $('#sortOrder').val() || 0,
+                    status: $('input[name="status"]:checked').val()
+                };
+                ajaxRequest('/brand/save', 'POST', data, function(res) {
+                    showSuccess('保存成功');
+                    setTimeout(function() { window.location.href = '/brand/list'; }, 1000);
+                });
+            });
+        });
+    </script>
+</body>
+</html>

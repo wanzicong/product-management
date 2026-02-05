@@ -1,0 +1,202 @@
+/* 自定义样式 */
+
+/* 全局样式 */
+body {
+    padding-top: 70px;
+    background-color: #f5f5f5;
+}
+
+/* 卡片样式 */
+.card {
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.05);
+    margin-bottom: 20px;
+}
+
+.card-header {
+    background-color: #fff;
+    border-bottom: 1px solid #eee;
+    font-weight: 600;
+}
+
+/* 统计卡片 */
+.stat-card {
+    transition: transform 0.3s;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+}
+
+.stat-card .stat-icon {
+    font-size: 3rem;
+    opacity: 0.8;
+}
+
+.stat-card .stat-number {
+    font-size: 2rem;
+    font-weight: bold;
+}
+
+.stat-card .stat-label {
+    color: #6c757d;
+    font-size: 0.9rem;
+}
+
+/* 表格样式 */
+.table th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.table td {
+    vertical-align: middle;
+}
+
+/* 状态标签 */
+.status-on {
+    color: #198754;
+}
+
+.status-off {
+    color: #dc3545;
+}
+
+/* 库存预警 */
+.stock-warning {
+    color: #dc3545;
+    font-weight: bold;
+}
+
+/* 商品图片 */
+.product-image {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 5px;
+}
+
+.product-image-large {
+    max-width: 200px;
+    max-height: 200px;
+    object-fit: cover;
+    border-radius: 10px;
+}
+
+/* 分类树 */
+.category-tree {
+    list-style: none;
+    padding-left: 0;
+}
+
+.category-tree ul {
+    list-style: none;
+    padding-left: 25px;
+}
+
+.category-tree li {
+    padding: 8px 0;
+    border-bottom: 1px dashed #eee;
+}
+
+.category-tree li:last-child {
+    border-bottom: none;
+}
+
+/* 搜索表单 */
+.search-form {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+}
+
+/* 分页样式 */
+.pagination {
+    margin-bottom: 0;
+}
+
+/* 操作按钮组 */
+.btn-group-sm > .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.8rem;
+}
+
+/* 登录页面 */
+.login-container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.login-card {
+    width: 400px;
+    padding: 40px;
+    background: #fff;
+    border-radius: 15px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+.login-card .logo {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.login-card .logo i {
+    font-size: 4rem;
+    color: #667eea;
+}
+
+.login-card .logo h2 {
+    margin-top: 10px;
+    color: #333;
+}
+
+/* 加载动画 */
+.loading {
+    display: none;
+    text-align: center;
+    padding: 20px;
+}
+
+.loading.show {
+    display: block;
+}
+
+/* 空数据提示 */
+.empty-data {
+    text-align: center;
+    padding: 50px;
+    color: #999;
+}
+
+.empty-data i {
+    font-size: 4rem;
+    margin-bottom: 20px;
+}
+
+/* 面包屑 */
+.breadcrumb {
+    background-color: transparent;
+    padding: 0;
+    margin-bottom: 20px;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+    .stat-card .stat-number {
+        font-size: 1.5rem;
+    }
+
+    .stat-card .stat-icon {
+        font-size: 2rem;
+    }
+
+    .table-responsive {
+        font-size: 0.85rem;
+    }
+}

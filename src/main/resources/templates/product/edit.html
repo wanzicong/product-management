@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>编辑商品 - 商品管理中心</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.css" rel="stylesheet">
+    <link th:href="@{/static/css/custom.css}" rel="stylesheet">
+</head>
+<body>
+    <div th:replace="~{layout/header :: header}"></div>
+
+    <div class="container-fluid py-4">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/product/list">商品管理</a></li>
+                <li class="breadcrumb-item active">编辑商品</li>
+            </ol>
+        </nav>
+
+        <div class="card">
+            <div class="card-header"><i class="bi bi-pencil"></i> 编辑商品</div>
+            <div class="card-body">
+                <form id="productForm">
+                    <input type="hidden" id="id" th:value="${product.id}">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label"><span class="text-danger">*</span> 商品编码</label>
+                                <input type="text" class="form-control" id="productCode" th:value="${product.productCode}" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label"><span class="text-danger">*</span> 商品名称</label>
+                                <input type="text" class="form-control" id="productName" th:value="${product.productName}" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label"><span class="text-danger">*</span> 商品分类</label>
+                                <select class="form-select" id="categoryId" required>
+                                    <option value="">请选择分类</option>
+                                    <option th:each="c : ${categories}" th:value="${c.id}" th:selected="${c.id == product.categoryId}"
+                                            th:text="${c.level == 1 ? c.categoryName : (c.level == 2 ? '├─ ' + c.categoryName : '│  ├─ ' + c.categoryName)}">
+                                    </option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">品牌</label>
+                                <select class="form-select" id="brandId">
+                                    <option value="">请选择品牌</option>
+                                    <option th:each="b : ${brands}" th:value="${b.id}" th:selected="${b.id == product.brandId}" th:text="${b.brandName}"></option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label"><span class="text-danger">*</span> 销售价格</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">¥</span>
+                                    <input type="number" class="form-control" id="price" th:value="${product.price}" step="0.01" min="0" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label">成本价格</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">¥</span>
+                                    <input type="number" class="form-control" id="costPrice" th:value="${product.costPrice}" step="0.01" min="0">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label">计量单位</label>
+                                <input type="text" class="form-control" id="unit" th:value="${product.unit}">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label">库存预警值</label>
+                                <input type="number" class="form-control" id="stockWarning" th:value="${product.stockWarning}" min="0">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label">排序值</label>
+                                <input type="number" class="form-control" id="sortOrder" th:value="${product.sortOrder}" min="0">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">商品主图</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="mainImage" th:value="${product.mainImage}">
+                            <input type="file" class="d-none" id="imageFile" accept="image/*">
+                            <button type="button" class="btn btn-outline-secondary" onclick="$('#imageFile').click()">
+                                <i class="bi bi-upload"></i> 上传
+                            </button>
+                        </div>
+                        <div id="imagePreview" class="mt-2">
+                            <img th:if="${product.mainImage}" th:src="${product.mainImage}" class="product-image-large">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">商品描述</label>
+                        <textarea class="form-control" id="description" rows="4" th:text="${product.description}"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">状态</label>
+                        <div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="status" value="1" th:checked="${product.status == 1}">
+                                <label class="form-check-label">上架</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="status" value="0" th:checked="${product.status == 0}">
+                                <label class="form-check-label">下架</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-primary px-5"><i class="bi bi-check-circle"></i> 保存</button>
+                        <a href="/product/list" class="btn btn-secondary px-5"><i class="bi bi-x-circle"></i> 取消</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script th:src="@{/static/js/common.js}"></script>
+    <script>
+        $(function() {
+            $('#imageFile').on('change', function() {
+                const file = this.files[0];
+                if (!file) return;
+                const formData = new FormData();
+                formData.append('file', file);
+                $.ajax({
+                    url: '/file/upload', type: 'POST', data: formData, processData: false, contentType: false,
+                    success: function(res) {
+                        if (res.code === 200) {
+                            $('#mainImage').val(res.data);
+                            $('#imagePreview').html(`<img src="${res.data}" class="product-image-large">`);
+                            showSuccess('上传成功');
+                        } else { showError(res.message); }
+                    }
+                });
+            });
+
+            $('#productForm').on('submit', function(e) {
+                e.preventDefault();
+                const data = {
+                    id: $('#id').val(),
+                    productCode: $('#productCode').val(),
+                    productName: $('#productName').val(),
+                    categoryId: $('#categoryId').val(),
+                    brandId: $('#brandId').val() || null,
+                    price: $('#price').val(),
+                    costPrice: $('#costPrice').val() || null,
+                    unit: $('#unit').val(),
+                    stockWarning: $('#stockWarning').val() || 10,
+                    sortOrder: $('#sortOrder').val() || 0,
+                    mainImage: $('#mainImage').val(),
+                    description: $('#description').val(),
+                    status: $('input[name="status"]:checked').val()
+                };
+                ajaxRequest('/product/update', 'POST', data, function(res) {
+                    showSuccess('保存成功');
+                    setTimeout(function() { window.location.href = '/product/list'; }, 1000);
+                });
+            });
+        });
+    </script>
+</body>
+</html>
