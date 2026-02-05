@@ -8,94 +8,137 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.css" rel="stylesheet">
     <link th:href="@{/static/css/custom.css}" rel="stylesheet">
 </head>
-<body>
+<body class="has-navbar">
     <div th:replace="~{layout/header :: header}"></div>
 
-    <div class="container-fluid py-4">
+    <div class="container-fluid py-4 px-4">
+        <!-- 面包屑 -->
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/"><i class="bi bi-house"></i> 首页</a></li>
+                <li class="breadcrumb-item active">商品列表</li>
+            </ol>
+        </nav>
+
+        <!-- 页面标题 -->
+        <div class="page-header">
+            <h4>
+                <i class="bi bi-box-seam"></i>
+                商品列表
+            </h4>
+            <p class="subtitle">管理所有商品信息，支持搜索、筛选和批量操作</p>
+        </div>
+
         <!-- 搜索表单 -->
-        <div class="search-form">
-            <form id="searchForm" class="row g-3">
-                <div class="col-md-2">
-                    <input type="text" class="form-control" id="productName" placeholder="商品名称">
+        <div class="search-form fade-in">
+            <div class="row g-3 align-items-end">
+                <div class="col-lg-3 col-md-6">
+                    <label class="form-label">商品名称/编码</label>
+                    <div class="search-box">
+                        <i class="bi bi-search search-icon"></i>
+                        <input type="text" id="keyword" class="form-control" placeholder="搜索商品名称或编码...">
+                    </div>
                 </div>
-                <div class="col-md-2">
-                    <input type="text" class="form-control" id="productCode" placeholder="商品编码">
-                </div>
-                <div class="col-md-2">
-                    <select class="form-select" id="categoryId">
+                <div class="col-lg-2 col-md-6">
+                    <label class="form-label">商品分类</label>
+                    <select id="categoryId" class="form-select">
                         <option value="">全部分类</option>
-                        <option th:each="c : ${categories}" th:value="${c.id}"
-                                th:text="${c.level == 1 ? c.categoryName : (c.level == 2 ? '├─ ' + c.categoryName : '│  ├─ ' + c.categoryName)}">
-                        </option>
+                        <option th:each="category : ${categories}" th:value="${category.id}" th:text="${category.categoryName}">分类</option>
                     </select>
                 </div>
-                <div class="col-md-2">
-                    <select class="form-select" id="brandId">
+                <div class="col-lg-2 col-md-6">
+                    <label class="form-label">品牌</label>
+                    <select id="brandId" class="form-select">
                         <option value="">全部品牌</option>
-                        <option th:each="b : ${brands}" th:value="${b.id}" th:text="${b.brandName}"></option>
+                        <option th:each="brand : ${brands}" th:value="${brand.id}" th:text="${brand.brandName}">品牌</option>
                     </select>
                 </div>
-                <div class="col-md-2">
-                    <select class="form-select" id="status">
+                <div class="col-lg-2 col-md-6">
+                    <label class="form-label">状态</label>
+                    <select id="status" class="form-select">
                         <option value="">全部状态</option>
                         <option value="1">上架</option>
                         <option value="0">下架</option>
                     </select>
                 </div>
-                <div class="col-md-2">
-                    <button type="button" class="btn btn-primary" onclick="loadData(1)">
-                        <i class="bi bi-search"></i> 搜索
-                    </button>
-                    <button type="button" class="btn btn-secondary" onclick="resetSearch()">
-                        <i class="bi bi-arrow-clockwise"></i> 重置
-                    </button>
+                <div class="col-lg-3 col-md-12">
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-primary" onclick="loadData(1)">
+                            <i class="bi bi-search"></i> 搜索
+                        </button>
+                        <button type="button" class="btn btn-secondary" onclick="resetSearch()">
+                            <i class="bi bi-arrow-counterclockwise"></i> 重置
+                        </button>
+                    </div>
                 </div>
-            </form>
+            </div>
         </div>
 
-        <!-- 操作按钮 -->
-        <div class="mb-3">
-            <a href="/product/add" class="btn btn-success">
-                <i class="bi bi-plus-circle"></i> 新增商品
-            </a>
-            <button type="button" class="btn btn-danger" onclick="batchDelete()">
-                <i class="bi bi-trash"></i> 批量删除
-            </button>
-            <button type="button" class="btn btn-primary" onclick="batchUpdateStatus(1)">
-                <i class="bi bi-check-circle"></i> 批量上架
-            </button>
-            <button type="button" class="btn btn-secondary" onclick="batchUpdateStatus(0)">
-                <i class="bi bi-x-circle"></i> 批量下架
-            </button>
+        <!-- 工具栏 -->
+        <div class="toolbar">
+            <div class="toolbar-left">
+                <span class="text-muted">共 <strong id="totalCount">0</strong> 条记录</span>
+            </div>
+            <div class="toolbar-right">
+                <a href="/product/add" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> 新增商品
+                </a>
+            </div>
         </div>
 
-        <!-- 数据表格 -->
-        <div class="card">
-            <div class="card-body">
+        <!-- 商品列表 -->
+        <div class="card fade-in">
+            <div class="card-body p-0">
                 <div class="table-responsive">
-                    <table class="table table-hover">
+                    <table class="table table-hover mb-0">
                         <thead>
                             <tr>
-                                <th><input type="checkbox" id="checkAll" onclick="toggleCheckAll()"></th>
-                                <th>图片</th>
-                                <th>商品编码</th>
-                                <th>商品名称</th>
+                                <th style="width: 50px;">
+                                    <input type="checkbox" id="checkAll">
+                                </th>
+                                <th style="width: 80px;">图片</th>
+                                <th>商品信息</th>
                                 <th>分类</th>
                                 <th>品牌</th>
                                 <th>价格</th>
                                 <th>库存</th>
                                 <th>状态</th>
-                                <th>操作</th>
+                                <th style="width: 180px;">操作</th>
                             </tr>
                         </thead>
                         <tbody id="dataList">
                             <tr>
-                                <td colspan="10" class="text-center">加载中...</td>
+                                <td colspan="9" class="text-center py-5">
+                                    <div class="loading-spinner"></div>
+                                    <p class="text-muted mb-0 mt-2">加载中...</p>
+                                </td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
-                <div id="pagination" class="mt-3"></div>
+            </div>
+            <div id="pagination" class="card-footer bg-transparent"></div>
+        </div>
+    </div>
+
+    <!-- 删除确认模态框 -->
+    <div class="modal fade" id="deleteModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title">
+                        <i class="bi bi-exclamation-triangle text-danger me-2"></i>
+                        确认删除
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-0">确定要删除该商品吗？此操作不可恢复。</p>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-danger" id="confirmDelete">确认删除</button>
+                </div>
             </div>
         </div>
     </div>
@@ -103,21 +146,42 @@
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script th:src="@{/static/js/common.js}"></script>
+    <script th:replace="~{layout/header :: navScript}"></script>
     <script>
         let currentPage = 1;
-        const pageSize = 10;
+        let deleteId = null;
+        const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
 
         $(function() {
             loadData(1);
+
+            // 全选/取消全选
+            $('#checkAll').on('change', function() {
+                $('input[name="ids"]').prop('checked', this.checked);
+            });
+
+            // 确认删除
+            $('#confirmDelete').on('click', function() {
+                if (deleteId) {
+                    $.post('/product/delete/' + deleteId, function(res) {
+                        deleteModal.hide();
+                        if (res.code === 200) {
+                            showSuccess('删除成功');
+                            loadData(currentPage);
+                        } else {
+                            showError(res.message || '删除失败');
+                        }
+                    });
+                }
+            });
         });
 
         function loadData(page) {
             currentPage = page;
-            const params = {
+            var params = {
                 pageNum: page,
-                pageSize: pageSize,
-                productName: $('#productName').val(),
-                productCode: $('#productCode').val(),
+                pageSize: 10,
+                keyword: $('#keyword').val(),
                 categoryId: $('#categoryId').val(),
                 brandId: $('#brandId').val(),
                 status: $('#status').val()
@@ -126,48 +190,71 @@
             $.get('/product/page', params, function(res) {
                 if (res.code === 200) {
                     renderTable(res.data);
-                    renderPagination(res.data);
-                } else {
-                    showError(res.message);
+                    $('#totalCount').text(res.data.total || 0);
+                    if (res.data.pages > 1) {
+                        $('#pagination').html(generatePagination(res.data.current, res.data.pages, 'loadData')).show();
+                    } else {
+                        $('#pagination').hide();
+                    }
                 }
             });
         }
 
         function renderTable(data) {
-            const list = data.records || [];
-            let html = '';
+            var list = data.records || [];
+            var html = '';
+
             if (list.length === 0) {
-                html = '<tr><td colspan="10" class="text-center text-muted py-4">暂无数据</td></tr>';
+                html = `
+                    <tr>
+                        <td colspan="9">
+                            <div class="empty-data">
+                                <i class="bi bi-inbox"></i>
+                                <h5>暂无商品数据</h5>
+                                <p>还没有添加任何商品，点击下方按钮开始添加</p>
+                                <a href="/product/add" class="btn btn-primary">
+                                    <i class="bi bi-plus-circle"></i> 新增商品
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                `;
             } else {
-                list.forEach(function(item) {
-                    const stockClass = item.stock <= item.stockWarning ? 'stock-warning' : '';
+                list.forEach(function(item, index) {
+                    var imageHtml = item.mainImage ?
+                        `<img src="${item.mainImage}" class="product-image" alt="商品图片">` :
+                        '<div class="image-placeholder"><i class="bi bi-image"></i></div>';
+
+                    var stockHtml = item.stock <= (item.stockWarning || 10) ?
+                        `<span class="stock-warning">${item.stock}</span>` :
+                        `<span>${item.stock}</span>`;
+
+                    var statusHtml = item.status === 1 ?
+                        '<span class="badge bg-success"><i class="bi bi-check-circle"></i> 上架</span>' :
+                        '<span class="badge bg-secondary"><i class="bi bi-pause-circle"></i> 下架</span>';
+
                     html += `
-                        <tr>
-                            <td><input type="checkbox" class="item-check" value="${item.id}"></td>
+                        <tr class="fade-in" style="animation-delay: ${index * 0.03}s">
+                            <td><input type="checkbox" name="ids" value="${item.id}"></td>
+                            <td>${imageHtml}</td>
                             <td>
-                                ${item.mainImage ?
-                                    `<img src="${item.mainImage}" class="product-image" alt="">` :
-                                    '<span class="text-muted">无图片</span>'}
+                                <div class="fw-medium mb-1">${item.productName}</div>
+                                <code class="text-muted small">${item.productCode}</code>
                             </td>
-                            <td>${item.productCode || '-'}</td>
-                            <td>${item.productName || '-'}</td>
-                            <td>${item.categoryName || '-'}</td>
+                            <td><span class="badge bg-info">${item.categoryName || '-'}</span></td>
                             <td>${item.brandName || '-'}</td>
-                            <td>${formatMoney(item.price)}</td>
-                            <td class="${stockClass}">${item.stock}</td>
-                            <td>${getStatusBadge(item.status)}</td>
+                            <td><span class="text-danger fw-bold">¥${parseFloat(item.price || 0).toFixed(2)}</span></td>
+                            <td>${stockHtml}</td>
+                            <td>${statusHtml}</td>
                             <td>
-                                <div class="btn-group btn-group-sm">
-                                    <a href="/product/detail/${item.id}" class="btn btn-outline-info" title="详情">
+                                <div class="action-btns">
+                                    <a href="/product/detail/${item.id}" class="btn btn-sm btn-secondary" title="查看">
                                         <i class="bi bi-eye"></i>
                                     </a>
-                                    <a href="/product/edit/${item.id}" class="btn btn-outline-primary" title="编辑">
+                                    <a href="/product/edit/${item.id}" class="btn btn-sm btn-primary" title="编辑">
                                         <i class="bi bi-pencil"></i>
                                     </a>
-                                    <a href="/stock/adjust/${item.id}" class="btn btn-outline-success" title="库存">
-                                        <i class="bi bi-archive"></i>
-                                    </a>
-                                    <button class="btn btn-outline-danger" onclick="deleteProduct(${item.id})" title="删除">
+                                    <button type="button" class="btn btn-sm btn-danger" onclick="deleteProduct(${item.id})" title="删除">
                                         <i class="bi bi-trash"></i>
                                     </button>
                                 </div>
@@ -177,82 +264,19 @@
                 });
             }
             $('#dataList').html(html);
-            $('#checkAll').prop('checked', false);
-        }
-
-        function renderPagination(data) {
-            const html = generatePagination(data.current, data.pages, 'loadData');
-            $('#pagination').html(html);
-        }
-
-        function resetSearch() {
-            $('#searchForm')[0].reset();
-            loadData(1);
-        }
-
-        function toggleCheckAll() {
-            const checked = $('#checkAll').prop('checked');
-            $('.item-check').prop('checked', checked);
-        }
-
-        function getSelectedIds() {
-            const ids = [];
-            $('.item-check:checked').each(function() {
-                ids.push($(this).val());
-            });
-            return ids;
         }
 
         function deleteProduct(id) {
-            confirmDialog('确定要删除该商品吗？', function() {
-                $.post('/product/delete/' + id, function(res) {
-                    if (res.code === 200) {
-                        showSuccess('删除成功');
-                        loadData(currentPage);
-                    } else {
-                        showError(res.message);
-                    }
-                });
-            });
+            deleteId = id;
+            deleteModal.show();
         }
 
-        function batchDelete() {
-            const ids = getSelectedIds();
-            if (ids.length === 0) {
-                showWarning('请选择要删除的商品');
-                return;
-            }
-            confirmDialog('确定要删除选中的 ' + ids.length + ' 个商品吗？', function() {
-                ajaxRequest('/product/batchDelete', 'POST', ids, function(res) {
-                    showSuccess('批量删除成功');
-                    loadData(currentPage);
-                });
-            });
-        }
-
-        function batchUpdateStatus(status) {
-            const ids = getSelectedIds();
-            if (ids.length === 0) {
-                showWarning('请选择要操作的商品');
-                return;
-            }
-            const action = status === 1 ? '上架' : '下架';
-            confirmDialog('确定要' + action + '选中的 ' + ids.length + ' 个商品吗？', function() {
-                $.ajax({
-                    url: '/product/batchUpdateStatus?status=' + status,
-                    type: 'POST',
-                    contentType: 'application/json',
-                    data: JSON.stringify(ids),
-                    success: function(res) {
-                        if (res.code === 200) {
-                            showSuccess('批量' + action + '成功');
-                            loadData(currentPage);
-                        } else {
-                            showError(res.message);
-                        }
-                    }
-                });
-            });
+        function resetSearch() {
+            $('#keyword').val('');
+            $('#categoryId').val('');
+            $('#brandId').val('');
+            $('#status').val('');
+            loadData(1);
         }
     </script>
 </body>

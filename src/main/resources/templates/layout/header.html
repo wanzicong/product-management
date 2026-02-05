@@ -1,61 +1,178 @@
-<!-- 头部导航 -->
-<nav th:fragment="header" class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="/">
-            <i class="bi bi-box-seam"></i> 商品管理中心
-        </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav me-auto">
-                <li class="nav-item">
-                    <a class="nav-link" th:classappend="${menu == 'index'} ? 'active'" href="/">
-                        <i class="bi bi-speedometer2"></i> 首页
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" th:classappend="${menu == 'product'} ? 'active'" href="/product/list">
-                        <i class="bi bi-box"></i> 商品管理
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" th:classappend="${menu == 'category'} ? 'active'" href="/category/list">
-                        <i class="bi bi-diagram-3"></i> 分类管理
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" th:classappend="${menu == 'brand'} ? 'active'" href="/brand/list">
-                        <i class="bi bi-bookmark-star"></i> 品牌管理
-                    </a>
-                </li>
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" th:classappend="${menu == 'stock'} ? 'active'" href="#" data-bs-toggle="dropdown">
-                        <i class="bi bi-archive"></i> 库存管理
-                    </a>
-                    <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="/stock/list"><i class="bi bi-list-ul"></i> 库存列表</a></li>
-                        <li><a class="dropdown-item" href="/stock/warning"><i class="bi bi-exclamation-triangle"></i> 库存预警</a></li>
-                        <li><a class="dropdown-item" href="/stock/record"><i class="bi bi-clock-history"></i> 库存记录</a></li>
-                    </ul>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" th:classappend="${menu == 'log'} ? 'active'" href="/log/list">
-                        <i class="bi bi-journal-text"></i> 操作日志
-                    </a>
-                </li>
-            </ul>
-            <ul class="navbar-nav">
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
-                        <i class="bi bi-person-circle"></i>
-                        <span th:text="${session.loginUser != null} ? (${session.loginUser.realName != null} ? ${session.loginUser.realName} : ${session.loginUser.username}) : '用户'">用户</span>
-                    </a>
-                    <ul class="dropdown-menu dropdown-menu-end">
-                        <li><a class="dropdown-item" href="/logout"><i class="bi bi-box-arrow-right"></i> 退出登录</a></li>
-                    </ul>
-                </li>
-            </ul>
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+    <!-- 导航栏片段 -->
+    <nav th:fragment="header" class="navbar navbar-expand-lg navbar-dark fixed-top">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">
+                <i class="bi bi-box-seam-fill"></i>
+                <span>商品管理中心</span>
+            </a>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/" data-nav="home">
+                            <i class="bi bi-house"></i> 首页
+                        </a>
+                    </li>
+
+                    <!-- 商品管理 -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown" data-nav="product">
+                            <i class="bi bi-box-seam"></i> 商品管理
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a class="dropdown-item" href="/product/list">
+                                    <i class="bi bi-list-ul"></i> 商品列表
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="/product/add">
+                                    <i class="bi bi-plus-circle"></i> 新增商品
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    <!-- 分类管理 -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown" data-nav="category">
+                            <i class="bi bi-diagram-3"></i> 分类管理
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a class="dropdown-item" href="/category/list">
+                                    <i class="bi bi-list-ul"></i> 分类列表
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="/category/add">
+                                    <i class="bi bi-plus-circle"></i> 新增分类
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    <!-- 品牌管理 -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown" data-nav="brand">
+                            <i class="bi bi-award"></i> 品牌管理
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a class="dropdown-item" href="/brand/list">
+                                    <i class="bi bi-list-ul"></i> 品牌列表
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="/brand/add">
+                                    <i class="bi bi-plus-circle"></i> 新增品牌
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    <!-- 库存管理 -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown" data-nav="stock">
+                            <i class="bi bi-archive"></i> 库存管理
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a class="dropdown-item" href="/stock/warning">
+                                    <i class="bi bi-exclamation-triangle"></i> 库存预警
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="/stock/record">
+                                    <i class="bi bi-journal-text"></i> 库存记录
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    <!-- 系统管理 -->
+                    <li class="nav-item dropdown" th:if="${session.user != null && session.user.role == 'ADMIN'}">
+                        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown" data-nav="system">
+                            <i class="bi bi-gear"></i> 系统管理
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a class="dropdown-item" href="/user/list">
+                                    <i class="bi bi-people"></i> 用户管理
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="/log/list">
+                                    <i class="bi bi-journal-text"></i> 操作日志
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+
+                <!-- 用户信息 -->
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                            <i class="bi bi-person-circle"></i>
+                            <span th:text="${session.user != null} ? (${session.user.realName} ?: ${session.user.username}) : '用户'">用户</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li>
+                                <a class="dropdown-item" href="/user/profile">
+                                    <i class="bi bi-person"></i> 个人信息
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="/user/password">
+                                    <i class="bi bi-key"></i> 修改密码
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item text-danger" href="/logout">
+                                    <i class="bi bi-box-arrow-right"></i> 退出登录
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
         </div>
-    </div>
-</nav>
+    </nav>
+
+    <!-- 导航高亮脚本 -->
+    <script th:fragment="navScript">
+        (function() {
+            var path = window.location.pathname;
+            var navLinks = document.querySelectorAll('.navbar .nav-link[data-nav]');
+            navLinks.forEach(function(link) {
+                var nav = link.getAttribute('data-nav');
+                if (nav === 'home' && path === '/') {
+                    link.classList.add('active');
+                } else if (nav === 'product' && path.startsWith('/product')) {
+                    link.classList.add('active');
+                } else if (nav === 'category' && path.startsWith('/category')) {
+                    link.classList.add('active');
+                } else if (nav === 'brand' && path.startsWith('/brand')) {
+                    link.classList.add('active');
+                } else if (nav === 'stock' && path.startsWith('/stock')) {
+                    link.classList.add('active');
+                } else if (nav === 'system' && (path.startsWith('/user') || path.startsWith('/log'))) {
+                    link.classList.add('active');
+                }
+            });
+        })();
+    </script>
+</body>
+</html>

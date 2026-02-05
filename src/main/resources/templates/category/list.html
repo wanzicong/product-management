@@ -8,18 +8,79 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.css" rel="stylesheet">
     <link th:href="@{/static/css/custom.css}" rel="stylesheet">
 </head>
-<body>
+<body class="has-navbar">
     <div th:replace="~{layout/header :: header}"></div>
 
-    <div class="container-fluid py-4">
-        <div class="mb-3">
-            <a href="/category/add" class="btn btn-success"><i class="bi bi-plus-circle"></i> 新增分类</a>
+    <div class="container-fluid py-4 px-4">
+        <!-- 面包屑 -->
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/"><i class="bi bi-house"></i> 首页</a></li>
+                <li class="breadcrumb-item active">分类管理</li>
+            </ol>
+        </nav>
+
+        <!-- 页面标题 -->
+        <div class="page-header">
+            <h4>
+                <i class="bi bi-diagram-3"></i>
+                分类管理
+            </h4>
+            <p class="subtitle">管理商品分类，支持多级分类结构</p>
         </div>
 
-        <div class="card">
-            <div class="card-header"><i class="bi bi-diagram-3"></i> 分类列表</div>
+        <!-- 工具栏 -->
+        <div class="toolbar">
+            <div class="toolbar-left">
+                <span class="text-muted">分类树形结构</span>
+            </div>
+            <div class="toolbar-right">
+                <a href="/category/add" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> 新增分类
+                </a>
+            </div>
+        </div>
+
+        <!-- 分类树 -->
+        <div class="card fade-in">
+            <div class="card-header">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-diagram-3"></i>
+                    <span>分类列表</span>
+                </div>
+                <button class="btn btn-sm btn-secondary" onclick="loadTree()">
+                    <i class="bi bi-arrow-clockwise"></i> 刷新
+                </button>
+            </div>
             <div class="card-body">
-                <div id="categoryTree" class="category-tree">加载中...</div>
+                <div id="categoryTree" class="category-tree">
+                    <div class="loading show">
+                        <div class="loading-spinner"></div>
+                        <p class="text-muted">加载中...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 删除确认模态框 -->
+    <div class="modal fade" id="deleteModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title">
+                        <i class="bi bi-exclamation-triangle text-danger me-2"></i>
+                        确认删除
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-0">确定要删除该分类吗？如果该分类下有子分类或商品，将无法删除。</p>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-danger" id="confirmDelete">确认删除</button>
+                </div>
             </div>
         </div>
     </div>
@@ -31,50 +92,79 @@
         $(function() { loadTree(); });
 
         function loadTree() {
+            $('#categoryTree').html(`
+                <div class="loading show">
+                    <div class="loading-spinner"></div>
+                    <p class="text-muted">加载中...</p>
+                </div>
+            `);
             $.get('/category/tree', function(res) {
                 if (res.code === 200) {
-                    $('#categoryTree').html(renderTree(res.data));
+                    if (!res.data || res.data.length === 0) {
+                        $('#categoryTree').html(`
+                            <div class="empty-data">
+                                <i class="bi bi-folder-x"></i>
+                                <h5>暂无分类数据</h5>
+                                <p>还没有添加任何分类，点击下方按钮开始添加</p>
+                                <a href="/category/add" class="btn btn-primary">
+                                    <i class="bi bi-plus-circle"></i> 新增分类
+                                </a>
+                            </div>
+                        `);
+                    } else {
+                        $('#categoryTree').html(renderTree(res.data));
+                    }
                 }
             });
         }
 
         function renderTree(list, level = 1) {
-            if (!list || list.length === 0) return '<p class="text-muted">暂无数据</p>';
-            let html = '<ul' + (level === 1 ? ' class="category-tree"' : '') + '>';
-            list.forEach(function(item) {
+            let html = '<ul class="category-tree">';
+            list.forEach(function(item, index) {
+                const hasChildren = item.children && item.children.length > 0;
                 const statusBadge = item.status === 1 ?
-                    '<span class="badge bg-success">启用</span>' :
-                    '<span class="badge bg-secondary">禁用</span>';
+                    '<span class="badge bg-success ms-2">启用</span>' :
+                    '<span class="badge bg-secondary ms-2">禁用</span>';
                 html += `
-                    <li>
-                        <div class="d-flex justify-content-between align-items-center">
+                    <li class="fade-in" style="animation-delay: ${index * 0.05}s">
+                        <div class="category-name">
                             <span>
-                                <i class="bi bi-folder${item.children && item.children.length > 0 ? '-fill text-warning' : ' text-secondary'}"></i>
-                                ${item.categoryName} ${statusBadge}
+                                <i class="bi bi-${hasChildren ? 'folder-fill text-warning' : 'folder text-accent'}"></i>
+                                <span class="fw-medium">${item.categoryName}</span>
+                                ${statusBadge}
                             </span>
-                            <div class="btn-group btn-group-sm">
-                                <a href="/category/add?parentId=${item.id}" class="btn btn-outline-success" title="添加子分类">
-                                    <i class="bi bi-plus"></i>
-                                </a>
-                                <a href="/category/edit/${item.id}" class="btn btn-outline-primary" title="编辑">
-                                    <i class="bi bi-pencil"></i>
-                                </a>
-                                <button class="btn btn-outline-danger" onclick="deleteCategory(${item.id})" title="删除">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </div>
                         </div>
-                        ${item.children && item.children.length > 0 ? renderTree(item.children, level + 1) : ''}
+                        <div class="action-btns">
+                            <a href="/category/add?parentId=${item.id}" class="btn btn-sm btn-success" title="添加子分类">
+                                <i class="bi bi-plus"></i>
+                            </a>
+                            <a href="/category/edit/${item.id}" class="btn btn-sm btn-primary" title="编辑">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <button class="btn btn-sm btn-danger" onclick="deleteCategory(${item.id})" title="删除">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
                     </li>
+                    ${hasChildren ? renderTree(item.children, level + 1) : ''}
                 `;
             });
             html += '</ul>';
             return html;
         }
 
+        let deleteId = null;
+        const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+
         function deleteCategory(id) {
-            confirmDialog('确定要删除该分类吗？', function() {
-                $.post('/category/delete/' + id, function(res) {
+            deleteId = id;
+            deleteModal.show();
+        }
+
+        document.getElementById('confirmDelete').addEventListener('click', function() {
+            if (deleteId) {
+                $.post('/category/delete/' + deleteId, function(res) {
+                    deleteModal.hide();
                     if (res.code === 200) {
                         showSuccess('删除成功');
                         loadTree();
@@ -82,8 +172,8 @@
                         showError(res.message);
                     }
                 });
-            });
-        }
+            }
+        });
     </script>
 </body>
 </html>
